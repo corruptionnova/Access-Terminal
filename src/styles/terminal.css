@@ -1,0 +1,71 @@
+body {
+    background-color: black;
+    color: white;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 16px;
+    line-height: 1.5;
+    margin: 0;
+    padding: 32px; /* Add padding around the terminal */
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden; /* Prevent scrolling */
+}
+
+.terminal {
+    border: 1px solid white;
+    padding: 24px;
+    height: calc(100vh - 64px); /* Adjust height for body padding */
+    width: calc(100vw - 64px);  /* Adjust width for body padding */
+    box-sizing: border-box;
+    overflow-y: auto;
+    display: block;
+}
+
+.output {
+    white-space: pre-wrap;
+    margin-top: 10px;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+.prompt-line {
+    display: flex;
+    align-items: center;
+    font-family: inherit;
+    font-size: 1em;
+    letter-spacing: 0;
+    margin-top: 8px; /* Add spacing above input */
+}
+
+.prompt {
+    margin-right: 8px;
+    color: white;
+    font-weight: bold;
+}
+
+.user-input {
+    white-space: pre;
+    min-width: 1ch;
+    letter-spacing: 0;
+}
+
+.user-input:empty + .cursor {
+    margin-right: 10px;
+}
+
+.cursor {
+    margin-left: 0;
+    color: white;
+    background: transparent;
+    border-radius: 0;
+    width: auto;
+    font-weight: bold;
+    display: inline-block;
+    animation: blink 1s steps(1) infinite;
+    font-family: inherit;
+}
+
+@keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+}

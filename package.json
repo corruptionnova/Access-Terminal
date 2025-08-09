@@ -1,0 +1,23 @@
+{
+  "name": "terminal-website",
+  "version": "1.0.0",
+  "description": "A website featuring a command-prompt or terminal-type interface.",
+  "main": "src/index.html",
+  "scripts": {
+    "start": "live-server src",
+    "build": "echo 'Build step not defined'",
+    "test": "echo 'No tests defined'"
+  },
+  "keywords": [
+    "terminal",
+    "command-prompt",
+    "interface",
+    "web"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "live-server": "^1.2.1"
+  }
+}
