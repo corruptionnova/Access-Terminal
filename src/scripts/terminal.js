@@ -94,9 +94,9 @@ document.addEventListener('DOMContentLoaded', () => {
                                 () => setTimeout(() => {
                                     typeMessage("Awaiting further input§",
                                         () => {},
-                                        5, 10, Number.MAX_VALUE
+                                        5, 10, 100000000
                                     )
-                                }),
+                                }, 500),
                             5, 10
                             );
                         }, 500),
@@ -135,9 +135,9 @@ document.addEventListener('DOMContentLoaded', () => {
                                                                         () => setTimeout(() => {
                                                                             typeMessage("Awaiting further input§",
                                                                                 () => {},
-                                                                                5, 10, Number.MAX_VALUE
+                                                                                5, 10, 100000000
                                                                             )
-                                                                        }),
+                                                                        }, 500),
                                                                         5, 10
                                                                     );
                                                                     setCookie("seenIntro", "true");
