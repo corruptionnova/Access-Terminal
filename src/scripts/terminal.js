@@ -65,7 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function fetchStringFromBackend(url, callback) {
         //temp
-        return "10%";
+        callback("10%");
     }
 
     function setCookie(name, value, days = 365) {
