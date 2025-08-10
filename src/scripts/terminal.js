@@ -46,39 +46,40 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function encode(text, keyword) {
-        const start = 32;
-        const range = 95; // 126 - 32 + 1
-        let result = '';
-        for (let i = 0; i < text.length; i++) {
-            const textChar = text.charCodeAt(i);
-            if (textChar < start || textChar > 126) {
+    const start = 32;
+    const range = 95;
+    let result = '';
+    for (let i = 0; i < text.length; i++) {
+        const code = text.charCodeAt(i);
+        if (code < start || code > 126) {
             result += text[i];
             continue;
-            }
-            const keyChar = keyword.charCodeAt(i % keyword.length);
-            const shifted = ((textChar - start) + (keyChar - start)) % range;
-            result += String.fromCharCode(shifted + start);
         }
-        return result;
+        const keyCode = keyword.charCodeAt(i % keyword.length);
+        const shifted = ((code - start) + (keyCode - start)) % range;
+        result += String.fromCharCode(shifted + start);
     }
+    return result;
+}
 
-    function decode(text, keyword) {
-        const start = 32;
-        const range = 95;
-        let result = '';
-        for (let i = 0; i < text.length; i++) {
-            const textChar = text.charCodeAt(i);
-            if (textChar < start || textChar > 126) {
+function decode(text, keyword) {
+    const start = 32;
+    const range = 95;
+    let result = '';
+    for (let i = 0; i < text.length; i++) {
+        const code = text.charCodeAt(i);
+        if (code < start || code > 126) {
+            // Skip decoding non-ASCII printable characters
             result += text[i];
             continue;
-            }
-            const keyChar = keyword.charCodeAt(i % keyword.length);
-            let shifted = ((textChar - start) - (keyChar - start));
-            if (shifted < 0) shifted += range;
-            result += String.fromCharCode(shifted + start);
         }
-        return result;
+        const keyCode = keyword.charCodeAt(i % keyword.length);
+        let shifted = (code - start) - (keyCode - start);
+        if (shifted < 0) shifted += range;
+        result += String.fromCharCode(shifted + start);
     }
+    return result;
+}
 
     async function hashString(message) {
         const encoder = new TextEncoder();
