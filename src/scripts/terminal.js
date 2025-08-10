@@ -549,13 +549,13 @@ function decode(text, keyword) {
     fetch('scripts/logs/chapter7.txt')
     .then(res => res.text())
     .then(text => {
-        chapter7LogText = text;
+        chapter7LogText = text.replace("\r\n", "\n");
     })
 
     fetch('scripts/logs/chapter8.txt')
     .then(res => res.text())
     .then(text => {
-        secretLogText = text;
+        secretLogText = text.replace("\r\n", "\n");
     })
 
     if (getCookie("seenIntro2") === "true") {
