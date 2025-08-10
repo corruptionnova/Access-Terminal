@@ -231,6 +231,7 @@ function decode(text, keyword) {
                     typeMessage("Successfully Decrypted Log!\n" + decoded, () => {
                     if (getCookie("seenLog7") === "true") {
                         setInputEnabled(true);
+                        isInLogDecryption = false;
                         return;
                     }
                     setTimeout(() => {
