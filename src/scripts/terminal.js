@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const chapter7LogTextHash = "e4429442dd0a259e2ebc047bc7e588e65f5c640e0ddac110a7b54764fa67bb16";
 
     let secretLogText = "";
-    const chapter8LogTextHash = "95fc666c0383430428c8ad8a249870ad40c31a5fd49fa667bf97adb34174cd16";
+    const chapter8LogTextHash = "e5761ca80822da2253030046f4aa4d9faf1427a279d60fbd15244f480989808d";
 
     function setInputEnabled(enabled) {
         inputEnabled = enabled;
