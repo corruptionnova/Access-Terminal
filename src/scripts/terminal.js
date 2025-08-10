@@ -201,6 +201,7 @@ function decode(text, keyword) {
             {
                 typeMessage("Decryption Key is suitable, but may not be correct. Attempting to decrypt log§", () => {
                     const decoding = decode(secretLogText, commandLower);
+                    console.log(decoding);
                     hashString(decoding).then(hash => {
                         console.log(hash);
 
