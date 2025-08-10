@@ -5,16 +5,96 @@ document.addEventListener('DOMContentLoaded', () => {
     let inputBuffer = '';
     let inputEnabled = false;
 
+    let chapter1LogText = "";
+    let chapter2LogText = "";
+    let chapter3LogText = "";    
+    let chapter4LogText = "";
+    let chapter5LogText = "";    
+    let chapter6LogText = "";
+
+    let chapter7LogText = "";
+    const chapter7LogTextHash = "65e351280687c743fbf3d55504f196dcb311d621567725ca06b7cd42c7411a83";
+
+    let secretLogText = "";
+    const chapter8LogTextHash = "95fc666c0383430428c8ad8a249870ad40c31a5fd49fa667bf97adb34174cd16";
+
     function setInputEnabled(enabled) {
         inputEnabled = enabled;
         promptLine.style.display = enabled ? 'flex' : 'none';
         if (enabled) userInput.focus();
+        document.getElementById('terminal').scrollTop = document.getElementById('terminal').scrollHeight;
     }
 
-    function typeMessage(message, callback, speedMin = 15, speedMax = 35, ellipsisDuration = 2000) {
+    const bg = document.getElementById('troy');
+
+    function setBackgroundOpacity(targetOpacity, duration = 500) {
+        const startOpacity = parseFloat(getComputedStyle(bg).opacity);
+        const startTime = performance.now();
+
+        function animate(time) {
+            const elapsed = time - startTime;
+            let progress = Math.min(elapsed / duration, 1);
+            const currentOpacity = startOpacity + (targetOpacity - startOpacity) * progress;
+            bg.style.opacity = currentOpacity;
+
+            if (progress < 1) {
+            requestAnimationFrame(animate);
+            }
+        }
+
+        requestAnimationFrame(animate);
+    }
+
+    function encode(text, keyword) {
+        const start = 32;
+        const range = 95; // 126 - 32 + 1
+        let result = '';
+        for (let i = 0; i < text.length; i++) {
+            const textChar = text.charCodeAt(i);
+            if (textChar < start || textChar > 126) {
+            result += text[i];
+            continue;
+            }
+            const keyChar = keyword.charCodeAt(i % keyword.length);
+            const shifted = ((textChar - start) + (keyChar - start)) % range;
+            result += String.fromCharCode(shifted + start);
+        }
+        return result;
+    }
+
+    function decode(text, keyword) {
+        const start = 32;
+        const range = 95;
+        let result = '';
+        for (let i = 0; i < text.length; i++) {
+            const textChar = text.charCodeAt(i);
+            if (textChar < start || textChar > 126) {
+            result += text[i];
+            continue;
+            }
+            const keyChar = keyword.charCodeAt(i % keyword.length);
+            let shifted = ((textChar - start) - (keyChar - start));
+            if (shifted < 0) shifted += range;
+            result += String.fromCharCode(shifted + start);
+        }
+        return result;
+    }
+
+    async function hashString(message) {
+        const encoder = new TextEncoder();
+        const data = encoder.encode(message);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+         // Convert bytes to hex string
+        const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        return hashHex;
+    }
+
+    function typeMessage(message, callback, speedMin = 15, speedMax = 35, ellipsisDuration = 2000, color = '#FFFFFF') {
         setInputEnabled(false);
         const line = document.createElement('div');
         output.appendChild(line);
+        line.style.color = color;
 
         const specialChar = '§';
         let ellipsisInterval = null;
@@ -24,7 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         function updateEllipsis() {
             ellipsisCount = (ellipsisCount + 1) % 4; // Cycles 0,1,2,3
-            line.textContent = message.slice(0, ellipsisPos) + '.'.repeat(ellipsisCount);
+            line.innerHTML = message.slice(0, ellipsisPos) + '.'.repeat(ellipsisCount);
         }
 
         function typeNext() {
@@ -38,34 +118,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (index === ellipsisPos) {
                     return;
                 }
-                line.textContent = message.slice(0, index + 1);
+                line.innerHTML = message.slice(0, index + 1);
                 index++;
+                document.getElementById('terminal').scrollTop = document.getElementById('terminal').scrollHeight;
                 const delay = speedMin + Math.random() * (speedMax - speedMin);
                 setTimeout(typeNext, delay);
             } else {
                 if (ellipsisInterval) {
                     setTimeout(() => {
                         clearInterval(ellipsisInterval);
-                        line.textContent = message.replace(specialChar, '...');
+                        line.innerHTML = message.replace(specialChar, '...');
                         if (callback) callback();
                     }, ellipsisDuration);
                 } else {
                     if (callback) callback();
+                    else setInputEnabled(true);
                 }
             }
         }
 
         typeNext();
-    }
-
-    function handleCommand(command) {
-        const response = `You entered: ${command}`;
-        typeMessage(response, () => setInputEnabled(true), 5, 10);
-    }
-
-    function fetchStringFromBackend(url, callback) {
-        //temp
-        callback("10%");
     }
 
     function setCookie(name, value, days = 365) {
@@ -82,91 +154,422 @@ document.addEventListener('DOMContentLoaded', () => {
         return null;
     }
 
-    if (getCookie("seenIntro") === "true") {
-        fetchStringFromBackend("http://localhost:3000/server-status", (serverStatus) => {
-            typeMessage(
-                "Using previous found inactive access server. Determining connection status§",
-                () => {
-                    typeMessage(
-                        "Connection status: Inactive",
-                        () => setTimeout(() => {
-                            typeMessage(`Connection Progress: ${serverStatus}.`,
-                                () => setTimeout(() => {
-                                    typeMessage("Awaiting further input§",
-                                        () => {},
-                                        5, 10, 100000000
-                                    )
-                                }, 500),
-                            5, 10
-                            );
-                        }, 500),
-                        5, 10
-                    );
-                },
-                5, 10,
-                3000
-            );
+    function deleteAllCookies() {
+        document.cookie.split(";").forEach(function(c) { document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); });
+    }
+    
+    function changeColor(color) {
+        document.body.style.color = color;
+
+        const terminal = document.querySelector('.terminal');
+        if (terminal) terminal.style.borderColor = color;
+
+        document.querySelectorAll('.prompt').forEach(el => {
+          el.style.color = color;
         });
-    } else {
-        // Boot message
-        typeMessage(
-            "Attempting to boot Nova Access Terminal (Ver 7.3)§",
-            () => {
-                typeMessage(
-                    "Failed to connect to Nova Access Server.",
-                    () => setTimeout(() => {
-                        typeMessage(
-                            "Attempting to connect to backup access server§",
-                            () => {
-                                typeMessage(
-                                    "Failed to connect to backup access server.",
-                                    () => setTimeout(() => {
-                                        typeMessage(
-                                            "Searching for inactive access servers to check connection status§",
+
+        document.querySelectorAll('.cursor').forEach(el => {
+            el.style.color = color;
+        });
+    }
+
+    let isInLogDecryption = false;
+    let decryptingLog8 = false;
+    let logsEnabled = false;
+    let troyCommandEnabled = false;
+
+    function handleCommand(command) {
+
+        if (getCookie("seenStatus") === "true") logsEnabled = true;
+        if (getCookie("troyCommandEnabled") === "true") troyCommandEnabled = true;
+
+        userInput.textContent = '';
+        inputBuffer = '';
+        var split = command.split(' ');
+
+        let commandLower = command.toLowerCase();
+        let args = [];
+
+        if (split.length > 0) {
+            commandLower = split[0].toLowerCase();
+            args = split.slice(1);
+        }
+
+        if (isInLogDecryption) {
+            if (decryptingLog8)
+            {
+                typeMessage("Decryption Key is suitable, but may not be correct. Attempting to decrypt log§", () => {
+                    const decoding = decode(secretLogText, commandLower);
+                    hashString(decoding).then(hash => {
+                        console.log(hash);
+
+                        if (hash == chapter8LogTextHash) {
+                            isInLogDecryption = false;
+                            typeMessage("Successfully Decrypted Log!\n" + decoding, () => {
+                                setInputEnabled(true);
+                            }, 5, 10);
+                        }
+                        else {
+                            typeMessage("Decryption Key is incorrect. Please try again later.", () => {
+                                isInLogDecryption = false;
+                                setInputEnabled(true);
+                            }, 5, 10);
+                        }
+                    })
+                }, 5, 10)
+            }
+            else {
+            typeMessage("Decryption Key is suitable, but may not be correct. Attempting to decrypt log§", () => {
+                const decoded = decode(chapter7LogText, commandLower);
+                hashString(decoded).then(hash => {
+                console.log(hash);
+
+                if (hash == chapter7LogTextHash) {
+                    typeMessage("Successfully Decrypted Log!\n" + decoded, () => {
+                    if (getCookie("seenLog7") === "true") {
+                        setInputEnabled(true);
+                        return;
+                    }
+                    setTimeout(() => {
+                    isInLogDecryption = false;
+                    if (getCookie("seenLog7") !== "true") {
+                        typeMessage("Message recieved by unknown sender. Patching through message§", () => { 
+                            clearOutput();
+                            typeMessage("I see you've gained access to an access terminal. They were all supposed to have been destr<strong>o</strong>yed, but I guess one slipped through the cracks.",
+                                () => {
+                                    setTimeout(() => {
+                                        typeMessage("I am the last survivor of the Nova Agen<strong>c</strong>y. I hop<strong>e</strong> you understand the e<strong>x</strong>treme gravity of the situation.",
                                             () => {
-                                                fetchStringFromBackend("http://localhost:3000/server-status", (serverStatus) => {
-                                                    typeMessage(
-                                                        "Found (1) inactive access server(s). Determining connection status§",
+                                                setTimeout(() => {
+                                                    typeMessage("The virus has spread beyond our control. There <strong>i</strong>s nothing el<strong>s</strong>e we can do.",
                                                         () => {
-                                                            typeMessage(
-                                                                "Connection Status: Inactive",
-                                                                () => setTimeout(() => {
-                                                                    typeMessage(`Connection Progress: ${serverStatus}.`,
-                                                                        () => setTimeout(() => {
-                                                                            typeMessage("Awaiting further input§",
-                                                                                () => {},
-                                                                                5, 10, 100000000
-                                                                            )
-                                                                        }, 500),
-                                                                        5, 10
-                                                                    );
-                                                                    setCookie("seenIntro", "true");
-                                                                }, 500),
-                                                                5, 10
-                                                            );
+                                                            setTimeout(() => {
+                                                                typeMessage("I have transferred you one last log from my internal filesyste<strong>m</strong>.", () => {
+                                                                    setTimeout(() => {
+                                                                        setCookie("seenLog7", "true");
+                                                                        typeMessage("Transmission finished. (1) new log(s) recieved.",
+                                                                            () => {
+                                                                                setTimeout(() => {
+                                                                                    clearOutput();
+                                                                                    setInputEnabled(true);
+                                                                                }, 1000);
+                                                                            },
+                                                                            5, 10
+                                                                );
+                                                                    }, 2000)
+                                                                }, 45, 50);
+                                                            })
                                                         },
-                                                        5, 10,
-                                                        3000
-                                                    );
-                                                });
+                                                        45, 50
+                                                    )
+                                                }, 2000)
                                             },
-                                            5, 10,
-                                            7000
-                                        );
-                                    }, 2000),
-                                    5, 10
-                                );
-                            },
-                            5, 10,
-                            5000
-                        );
-                    }, 1000),
-                    5, 10
-                );
-            },
-            5, 10,
-            5000
-        );
+                                            45, 50
+                                        )
+                                    }, 2000)
+                                },
+                                45, 50
+                            )
+
+                        }, 5, 10, 4000);
+                    }
+                    else
+                    {
+                        setInputEnabled(true);
+                    }
+                }, 10000)
+                    
+                }, 5, 10);
+                }
+                else {
+                    typeMessage("Decryption Key is incorrect. Please try again later.", () => {
+                        isInLogDecryption = false;
+                        setInputEnabled(true);
+                    }, 5, 10);
+                }
+                });
+            }, 5, 10, 5000);
+        }
+            return;
+        }
+
+        if (commandLower === 'help') {
+            typeMessage("Available commands: help, clear, status, log" + (troyCommandEnabled ? ", troy" : "") + (getCookie("seenLog7") === "true" ? ", transmission" : ""), () => { setInputEnabled(true); }, 5, 10);
+        }
+        else if (commandLower === 'reset') {
+            deleteAllCookies();
+        }
+        else if (commandLower === 'clear') {
+            clearOutput();
+        }
+        else if (commandLower === 'transmission' && getCookie("seenLog7") === "true") {
+            typeMessage("Message recieved by unknown sender. Patching through message§", () => { 
+                            clearOutput();
+                            typeMessage("I see you've gained access to an access terminal. They were all supposed to have been destr<strong>o</strong>yed, but I guess one slipped through the cracks.",
+                                () => {
+                                    setTimeout(() => {
+                                        typeMessage("I am the last survivor of the Nova Agen<strong>c</strong>y. I hop<strong>e</strong> you understand the e<strong>x</strong>treme gravity of the situation.",
+                                            () => {
+                                                setTimeout(() => {
+                                                    typeMessage("The virus has spread beyond our control. There <strong>i</strong>s nothing el<strong>s</strong>e we can do.",
+                                                        () => {
+                                                            setTimeout(() => {
+                                                                typeMessage("I have transferred you one last log from my internal filesyste<strong>m</strong>.", () => {
+                                                                    setTimeout(() => {
+                                                                        setCookie("seenLog7", "true");
+                                                                        typeMessage("Transmission finished. (1) new log(s) recieved.",
+                                                                            () => {
+                                                                                setTimeout(() => {
+                                                                                    clearOutput();
+                                                                                    setInputEnabled(true);
+                                                                                }, 1000);
+                                                                            },
+                                                                            5, 10
+                                                                );
+                                                                    }, 2000)
+                                                                }, 45, 50);
+                                                            })
+                                                        },
+                                                        45, 50
+                                                    )
+                                                }, 2000)
+                                            },
+                                            45, 50
+                                        )
+                                    }, 2000)
+                                },
+                                45, 50
+                            )
+
+                        }, 5, 10, 4000);
+        }
+        else if (commandLower === 'status') {
+            typeMessage("Nova Surveilence System Status: Offline", () => {
+                setTimeout(() => {
+                    typeMessage("Last Connection: 12/2/2024 14:32:45", () => { }, 5, 10);
+                    typeMessage("Last Message: Massive quake detected, lack of Nova life signals warrants usage of emergency shutdown protocol. Shutting down.\nThe (7) most recent log(s) have been uploaded to the system.", () => { 
+                        setInputEnabled(true); 
+                        logsEnabled = true;
+                        setCookie("seenStatus", "true");
+                    }, 5, 10);
+                }, 500);
+            }, 5, 10);
+        }
+        else if (commandLower === 'log' || commandLower === 'logs') {
+
+            if (!logsEnabled) {
+                typeMessage("Error: Logs are currently unavailable. Please check system status.", () => { setInputEnabled(true); }, 5, 10);
+                return;
+            }
+
+            if (args.length === 0) {
+                typeMessage("Available logs: 1, 2, 3, 4, 5, 6, 7" + (getCookie("seenLog7") === "true" ? ", 8" : ""), () => { setInputEnabled(true); }, 5, 10);
+            }
+
+            if (args.length > 0) {
+                const logNumber = parseInt(args[0]);
+                switch (logNumber) {
+                    case 1:
+                        typeMessage(chapter1LogText, () => { setInputEnabled(true); }, 5, 10);
+                        break;
+                    case 2:
+                        typeMessage(chapter2LogText, () => { setInputEnabled(true); }, 5, 10);
+                        break;
+                    case 3:
+                        typeMessage(chapter3LogText, () => { setInputEnabled(true); }, 5, 10);
+                        break;
+                    case 4:
+                        typeMessage(chapter4LogText, () => { setInputEnabled(true); }, 5, 10);
+                        break;
+                    case 5:
+                        typeMessage(chapter5LogText, () => { setInputEnabled(true); }, 5, 10);
+                        break;
+                    case 6:
+                        setBackgroundOpacity(0.05, 1000);
+                        typeMessage(chapter6LogText, () => { 
+                            setTimeout(() => {
+                                setInputEnabled(true); 
+                                setBackgroundOpacity(0, 1000);
+                            }, 4000)
+                        }, 25, 30, 0, '#DA012E');
+                        setCookie("customName", "Intruder");
+                        setCookie("troyCommandEnabled", "true");
+                        troyCommandEnabled = true;
+                        break;
+                    case 7:
+                        isInLogDecryption = true;
+                        typeMessage("Log Encrypted: Please enter decryption key.", () => {
+                            setInputEnabled(true);
+                        }, 5, 10);
+                        break;
+                    case 8:
+                        if (getCookie("seenLog7") !== "true") {
+                            typeMessage("Invalid log number.", () => { setInputEnabled(true); }, 5, 10);
+                            return;
+                        }
+                        isInLogDecryption = true;
+                        decryptingLog8 = true;
+                        typeMessage("Log Encrypted: Please enter decryption key.", () => {
+                            setInputEnabled(true);
+                        }, 5, 10);
+                        break;
+                    default:
+                        typeMessage("Invalid log number.", () => { setInputEnabled(true); }, 5, 10);
+                }
+            }
+        }
+        else if (commandLower === 'troy' && troyCommandEnabled) {
+            const messages = ["fuck you.", "take off your skin!", "did you know if you laid out all your blood vessels from end to end, you would be dead? facinating!", 
+                "have you ever heard of the secret letter phenomenon? apparently, the letter d is pretty secret!", 
+                "kill yourself!", "press Alt+F4 for the next secret!", "Did you know if you open file explorer, and delete the folder C:\\Windows\\System32, it'll give you a clue for the next secret?",
+                "Ruina Mentis is the greatest insanity song. I love that black and red guy!",
+            `                                                            
+                                         ************     *#                            
+                                   **@@@@%%@@@@@@@@@@@@* *@@*                           
+                                 *@@@@@@%@@@*@@@@@@@@@@*@@@@@*                          
+                               *@@@@@@@@*@@@@@*@@@@@*@@@@@@@@@*                         
+                              *@@@@@@@@@*@@@@@*@*%@@@@@@@@@@@@@*                        
+                        %    *@@@@@@@@@*@@@@@@@@@@@@@@@@@@@@@@@*                        
+                        %%   %@@@@@@@@*@@@@@@@@@@@@@@@@@@@@@@@@%                        
+                        %%%%%%@@@@@@@#@@@@@@@@@@@@@@@@@@@@@@@@*                         
+                         @%@@%%%%@@@@@@@@@@@@@@@@@@@@@@@@@@@* *  *%*                    
+                        @%%%%@%%%%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@#*                     
+                        @%%%%%%%%%@@@@@@@@%@@@@@@@@@@@@@@@@@@@@@@                       
+                        @%%%%%%%%%@@@@@@@@@@*@@@@@@%%%%@@@@@@@@@                        
+                        @%%%%@*@@@@@@@@@@@@@@%@*%%%%%%%%@@@@@@%                         
+                        @%%%%%@@@@@@@@@@@@@@%%%%%%%@@@@@@@@@*                           
+                     @@@%%%%%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@**@*                          
+               @@@@@@%%@%%%%%%#@*@@%@@@@@@@@@@@@@@@@@%@@@*@*                            
+              @@%%%%%@@@@%%%%%@@@@@@@%@%@%@@@@@@%@%@@@@@*                               
+              @@%%@@@%%%@%%%%%@@%%%@@**@%@@@@@@@@@@#@@*#*                               
+              @@@@@%%%%%%%%%%%@@%%%%@%%%@#********@@#@@@@@@**                           
+              @@@@%%%%%%%@%%%%%@%%%%%%%%%@@@@@@@@%@@@@@@@@@***                          
+               @@@@%%%%%%%@%%%%@%%%%%@%%%@#@@@@@*@@@@@@@@*@*                            
+                @@@@%%%%%@@%%%%@%%%%%@%%%%@@%**@*%%@@@@@@@@@@*                          
+                @@@@%%%%%%%%%%%%@%%%%%@%%%@*@@@@%@@@@@@@@@@@@@@                         
+                @@@@@%%%%%%%%%%%@@%%%%@%%@@*%@@@@%@@@@@@@@@@@@@@*                       
+                 @@@@%%%%%%%%%%%@@%%%%@%%@@@%@@@@%@@@@@@@@@@@@@@@*                      
+                  @@@@%%@@@@%%%%@@@@@@@@@@%@@@@%@%%@@@@@@@@@@@@@@@@*                    
+                    @@@@@@@@@@@@@@@@@@@@@@@@@@@%@%%@@@@@@@@@@@@@@@@@@                   
+                     @@@@@@@@@@@@@@                                                     
+                       @@@@@@@@@                                                        `,
+        ];
+
+            const randomIndex = Math.floor(Math.random() * messages.length);
+            const randomMessage = messages[randomIndex];
+
+            let minSpeed = 25;
+            let maxSpeed = 30;
+
+            if (randomIndex === messages.length - 1) {
+                minSpeed = 5;
+                maxSpeed = 10;
+            }
+
+            setBackgroundOpacity(0.05, 300);
+            typeMessage(randomMessage, () => { 
+                setInputEnabled(true); 
+                setBackgroundOpacity(0, 500);
+            }, minSpeed, maxSpeed, 0, '#DA012E');
+        }
+        else {
+            typeMessage(`Unknown command: ${commandLower}`, () => {
+                setInputEnabled(true);
+            }, 5, 10);
+        }
+    }
+
+    function fetchStringFromBackend(url, callback) {
+        // temp
+        callback("101%");
+    }
+
+    function clearOutput() {
+        output.innerHTML = '';
+        inputBuffer = '';
+        userInput.textContent = '';
+    }
+
+    function startMain() {
+        const name = getCookie("customName") || "Guest";
+
+        typeMessage(`Nova Access Terminal (Ver 7.3) - Welcome, ${name}!`, () => { }, 5, 10);
+        typeMessage("Type 'help' to see available commands.", () => { }, 5, 10);
+        setInputEnabled(true);
+    }
+
+    fetch('scripts/logs/chapter1.txt')
+    .then(res => res.text())
+    .then(text => {
+        chapter1LogText = text;
+    })
+
+    fetch('scripts/logs/chapter2.txt')
+    .then(res => res.text())
+    .then(text => {
+        chapter2LogText = text;
+    })
+
+    fetch('scripts/logs/chapter3.txt')
+    .then(res => res.text())
+    .then(text => {
+        chapter3LogText = text;
+    })
+    
+    fetch('scripts/logs/chapter4.txt')
+    .then(res => res.text())
+    .then(text => {
+        chapter4LogText = text;
+    })
+
+    fetch('scripts/logs/chapter5.txt')
+    .then(res => res.text())
+    .then(text => {
+        chapter5LogText = text;
+    })
+
+    fetch('scripts/logs/chapter6.txt')
+    .then(res => res.text())
+    .then(text => {
+        chapter6LogText = text.split('⠀')[0];
+    })
+
+    fetch('scripts/logs/chapter7.txt')
+    .then(res => res.text())
+    .then(text => {
+        chapter7LogText = text;
+    })
+
+    fetch('scripts/logs/chapter8.txt')
+    .then(res => res.text())
+    .then(text => {
+        secretLogText = text;
+    })
+
+    if (getCookie("seenIntro2") === "true") {
+        startMain();
+    } else {
+        typeMessage("Attempting to boot Nova Access Terminal (Ver 7.3)§", () => {
+            typeMessage("Failed to connect to Nova Access Server.", () => setTimeout(() => {
+                typeMessage("Attempting to connect to backup access server§", () => {
+                    typeMessage("Failed to connect to backup access server.", () => setTimeout(() => {
+                        typeMessage("Searching for inactive access servers to check connection status§", () => {
+                            fetchStringFromBackend("http://localhost:3000/server-status", (serverStatus) => {
+                                typeMessage("Found (1) inactive access server(s). Determining connection status§", () => {
+                                    typeMessage("Connection Status: Active", () => setTimeout(() => {
+                                        typeMessage(`Connecting§`, () => {
+                                            clearOutput();
+                                            startMain();
+                                        }, 5, 10, 4000);
+                                        setCookie("seenIntro2", "true");
+                                    }, 500), 5, 10);
+                                }, 5, 10, 3000);
+                            });
+                        }, 5, 10, 7000);
+                    }, 2000), 5, 10);
+                }, 5, 10, 5000);
+            }, 1000), 5, 10);
+        }, 5, 10, 5000);
     }
 
     window.addEventListener('keydown', (e) => {
@@ -183,15 +586,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (e.key === 'Backspace') {
             inputBuffer = inputBuffer.slice(0, -1);
+            document.getElementById('terminal').scrollTop = document.getElementById('terminal').scrollHeight;
         } else if (e.key === 'Enter') {
             const commandLine = document.createElement('div');
             commandLine.textContent = '> ' + inputBuffer;
             output.appendChild(commandLine);
-
+            document.getElementById('terminal').scrollTop = document.getElementById('terminal').scrollHeight;
             handleCommand(inputBuffer);
             inputBuffer = '';
         } else if (e.key.length === 1) {
             inputBuffer += e.key;
+            document.getElementById('terminal').scrollTop = document.getElementById('terminal').scrollHeight;
         }
 
         userInput.textContent = inputBuffer;

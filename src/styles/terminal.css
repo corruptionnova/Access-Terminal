@@ -11,6 +11,18 @@ body {
     overflow: hidden; /* Prevent scrolling */
 }
 
+#troy {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image: url('images/troy.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    opacity: 0; 
+    pointer-events: none;
+    z-index: -1;
+}
+
 .terminal {
     border: 1px solid white;
     padding: 24px;
@@ -26,6 +38,7 @@ body {
     margin-top: 10px;
     min-height: 0;
     overflow-y: auto;
+    overflow-anchor: auto;
 }
 
 .prompt-line {
