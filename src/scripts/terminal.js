@@ -500,6 +500,16 @@ function decode(text, keyword) {
         setInputEnabled(true);
     }
 
+    function hexToString(hexString) {
+  let result = '';
+  for (let i = 0; i < hexString.length; i += 2) {
+    const hexPair = hexString.substring(i, i + 2);
+    const decimalValue = parseInt(hexPair, 16);
+    result += String.fromCharCode(decimalValue);
+  }
+  return result;
+}
+
     fetch('scripts/logs/chapter1.txt')
     .then(res => res.text())
     .then(text => {
