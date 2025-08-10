@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let chapter6LogText = "";
 
     let chapter7LogText = "";
-    const chapter7LogTextHash = "65e351280687c743fbf3d55504f196dcb311d621567725ca06b7cd42c7411a83";
+    const chapter7LogTextHash = "e4429442dd0a259e2ebc047bc7e588e65f5c640e0ddac110a7b54764fa67bb16";
 
     let secretLogText = "";
     const chapter8LogTextHash = "95fc666c0383430428c8ad8a249870ad40c31a5fd49fa667bf97adb34174cd16";
@@ -546,17 +546,19 @@ function decode(text, keyword) {
         chapter6LogText = text.split('⠀')[0];
     })
 
-    fetch('scripts/logs/chapter7.txt')
-    .then(res => res.text())
-    .then(text => {
-        chapter7LogText = text.replace("\r\n", "\n");
-    })
+fetch('scripts/logs/chapter7.txt')
+  .then(res => res.arrayBuffer())
+  .then(buffer => {
+    const decoder = new TextDecoder('utf-8');
+    chapter7LogText = decoder.decode(buffer);
+  });
 
-    fetch('scripts/logs/chapter8.txt')
-    .then(res => res.text())
-    .then(text => {
-        secretLogText = text.replace("\r\n", "\n");
-    })
+fetch('scripts/logs/chapter8.txt')
+  .then(res => res.arrayBuffer())
+  .then(buffer => {
+    const decoder = new TextDecoder('utf-8');
+    secretLogText = decoder.decode(buffer);
+  });
 
     if (getCookie("seenIntro2") === "true") {
         startMain();
