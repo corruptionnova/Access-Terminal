@@ -133,7 +133,6 @@ function decode(text, keyword) {
                     }, ellipsisDuration);
                 } else {
                     if (callback) callback();
-                    else setInputEnabled(true);
                 }
             }
         }
@@ -208,7 +207,13 @@ function decode(text, keyword) {
                         if (hash == chapter8LogTextHash) {
                             isInLogDecryption = false;
                             typeMessage("Successfully Decrypted Log!\n" + decoding, () => {
-                                setInputEnabled(true);
+                                setTimeout(() => {
+                                    clearOutput();
+                                    setTimeout(() => {
+                                        typeMessage("Connection to Access Terminal lost. Your access has been revoked.");
+                                        setCookie("thosewhoknow", "true");
+                                    }, 3000)
+                                }, 15000)
                             }, 5, 10);
                         }
                         else {
@@ -562,6 +567,10 @@ fetch('scripts/logs/chapter8.txt')
     secretLogText = decoder.decode(buffer);
   });
 
+    if (getCookie("thosewhoknow") === "true") {
+        typeMessage("Connection to Access Terminal lost. Your access has been revoked.");
+        return;
+    }
     if (getCookie("seenIntro2") === "true") {
         startMain();
     } else {
