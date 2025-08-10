@@ -129,7 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                                         "Found (1) inactive access server(s). Determining connection status§",
                                                         () => {
                                                             typeMessage(
-                                                                "Connection status: Inactive",
+                                                                "Connection Status: Inactive",
                                                                 () => setTimeout(() => {
                                                                     typeMessage(`Connection Progress: ${serverStatus}.`,
                                                                         () => setTimeout(() => {
